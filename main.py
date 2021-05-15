@@ -98,15 +98,20 @@ st.write(df_rs_target.drop(columns=["No"]).describe())
 
 st.markdown("""
 <style>
-div.small-font dt,dd {
+p.x-small-font {
+    font-size:small !important;
+}
+div.xx-small-font dt,dd,a {
     font-size:xx-small !important;
 }
 </style>
 """, unsafe_allow_html=True)
 st.sidebar.markdown("""
 -----
-<div class="small-font">
+<p>GitHub</p>
+<p><a href="https://github.com/shimat/RealEstatePrice">https://github.com/shimat/RealEstatePrice</a></p>
 <p>出典</p>
+<div class="xx-small-font">
 <dl>
 <dt>マンション取引価格データ</dt>
 <dd>不動産取引価格情報ダウンロードサービス
