@@ -12,6 +12,16 @@ https://geoshape.ex.nii.ac.jp/ka/ https://www.e-stat.go.jp/terms-of-use
 
 『国勢調査町丁・字等別境界データセット』（CODH作成） 「平成27年国勢調査町丁・字等別境界データ」（NICT加工）
 
+### TopoJSON -> GeoJSON
+https://github.com/topojson/topojson-client/blob/master/README.md#topo2geo
+
+```sh
+sudo npm install -g topojson-client
+
+topo2geo town < 清田区.topojson
+mv town 清田区_geo.json
+```
+
 ## Installation
 ### geopandas (Windows)
 https://towardsdatascience.com/geopandas-installation-the-easy-way-for-windows-31a666b3610f
@@ -37,14 +47,4 @@ packages.txt
 ```
 gdal-bin
 python-rtree
-```
-
-### TopoJSON -> GeoJSON
-https://github.com/topojson/topojson-client/blob/master/README.md#topo2geo
-
-```sh
-sudo npm install -g topojson-client
-
-topo2geo town < 清田区.topojson
-mv town 清田区_geo.json
 ```
