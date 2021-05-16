@@ -4,7 +4,7 @@ import pandas as pd
 import pydeck
 import streamlit as st
 from converter import Converter
-from load_data import load_coordinates_csv, load_real_estate_csv, load_geopandas
+from data_loader import DataLoader
 
 
 REAL_ESTATE_CSV_FILE_NAME = "data/不動産情報_北海道.csv"
@@ -34,12 +34,12 @@ else:
     unit_value = 400 / 121
 
 # 座標
-df_pos = load_coordinates_csv(COORDINATES_CSV_FILE_NAME)
+df_pos = DataLoader.load_coordinates_csv(COORDINATES_CSV_FILE_NAME)
 pos = df_pos[df_pos['市区町村名'].str.startswith(area)].iloc[0]
 # st.write(pos)
 
 # 物件の絞り込み
-df_rs = load_real_estate_csv(REAL_ESTATE_CSV_FILE_NAME).copy()
+df_rs = DataLoader.load_real_estate_csv(REAL_ESTATE_CSV_FILE_NAME).copy()
 df_rs = df_rs[df_rs['市区町村名'].str.startswith(area)]
 #st.write(df_rs)
 df_rs = df_rs[df_rs['種類'].str.startswith(kind)]
@@ -68,7 +68,7 @@ df_count_by_area = df_area_groups.count().rename(columns={'単位換算取引価
 # st.write(df_count_by_area)
 
 
-gdf = load_geopandas(f"data/geojson/{area}_geo.json").copy()
+gdf = DataLoader.load_geopandas_from_url(f"https://raw.githubusercontent.com/shimat/geodata/main/geojson/{area}_geo.json").copy()
 # st.write(gdf.head())
 # gdf = gdf.assign(bg_color=[[0, 0, 0, 0] for _ in range(len(gdf))])
 
@@ -76,11 +76,15 @@ gdf['price'] = 0
 gdf['count'] = 0
 
 for index, row in df_price_by_area.iterrows():
-    area_name_kansuji = Converter.replace_area_number_to_kansuji(index)
+    if area == '名寄市':
+        area_to_match = index  # TODO: 住所が変更された模様, マッチしない
+    else:
+        area_to_match = Converter.replace_area_number_to_kansuji(index)
+    # st.write(index, area_to_match)
     price = row["単位換算取引価格"]
     count = df_count_by_area["count"].get(index, 0)
-    gdf.loc[gdf['S_NAME'].str.startswith(area_name_kansuji), 'price'] = price
-    gdf.loc[gdf['S_NAME'].str.startswith(area_name_kansuji), 'count'] = count
+    gdf.loc[gdf['S_NAME'].str.startswith(area_to_match), 'price'] = price
+    gdf.loc[gdf['S_NAME'].str.startswith(area_to_match), 'count'] = count
 
 gdf['norm_price'] = (gdf['price']) / price_max
 gdf['elevation'] = gdf['norm_price'] * 3000
@@ -130,9 +134,6 @@ st.write(df_rs_target.drop(columns=["No"]).describe())
 
 st.markdown("""
 <style>
-p.x-small-font {
-    font-size:small !important;
-}
 div.xx-small-font dt,dd,a {
     font-size:xx-small !important;
 }
