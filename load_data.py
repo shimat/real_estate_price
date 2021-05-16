@@ -42,7 +42,7 @@ def load_real_estate_csv(file_name: str):
                  '取引時点',
                  # '改装'
                  ])
-    csv = csv[csv['市区町村名'].str.contains('札幌市')]
+    # csv = csv[csv['市区町村名'].str.contains('札幌市')]
     csv = csv[csv['種類'] == '中古マンション等']
     csv['最寄駅：距離（分）'] = pd.to_numeric(csv["最寄駅：距離（分）"], errors='coerce')
     csv['面積（㎡）'] = pd.to_numeric(csv["面積（㎡）"], errors='coerce')

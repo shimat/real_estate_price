@@ -4,22 +4,50 @@ import pandas as pd
 import pydeck
 import streamlit as st
 from converter import Converter
-from load_data import load_real_estate_csv, load_geopandas
+from load_data import load_coordinates_csv, load_real_estate_csv, load_geopandas
 
-REAL_ESTATE_CSV_FILE_NAME = "data/マンション情報_札幌.csv"
+
+REAL_ESTATE_CSV_FILE_NAME = "data/マンション情報_北海道.csv"
+COORDINATES_CSV_FILE_NAME = "data/位置情報.csv"
 
 st.set_page_config(layout="wide")
 
-ward = st.sidebar.selectbox('行政区', ('中央区', '東区', '西区', '南区', '北区', '豊平区', '清田区', '白石区', '厚別区', '手稲区'))
+area = st.sidebar.selectbox('地域',
+                            ('札幌市中央区',
+                             '札幌市東区',
+                             '札幌市西区',
+                             '札幌市南区',
+                             '札幌市北区',
+                             '札幌市豊平区',
+                             '札幌市清田区',
+                             '札幌市白石区',
+                             '札幌市厚別区',
+                             '札幌市手稲区',
+                             '函館市',
+                             '小樽市',
+                             '旭川市',
+                             '釧路市',
+                             '帯広市',
+                             '北見市',
+                             '苫小牧市',
+                             '江別市'))
+kind = st.sidebar.selectbox('種類', ('中古マンション等', '宅地(土地)', '宅地(土地と建物)'))
 aggregation_period = st.sidebar.radio("集計期間", ('全期間(2005-2020)', '2005-2009', '2010-2014', '2015-2020'))
 aggregation_mode = st.sidebar.radio('集計方法', ('mean', 'median', 'max', 'min'))
-st.title(f'札幌市中古マンション取引価格集計 ({ward})')
+st.title(f'北海道不動産取引価格集計 ({area})')
 st.markdown("一律70m&#178;で換算した価格で集計しています")
 
+# 座標
+df_pos = load_coordinates_csv(COORDINATES_CSV_FILE_NAME)
+pos = df_pos[df_pos['市区町村名'].str.startswith(area)].iloc[0]
+# st.write(pos)
+
+# 物件の絞り込み
 df_rs = load_real_estate_csv(REAL_ESTATE_CSV_FILE_NAME).copy()
-df_rs = df_rs[df_rs['市区町村名'].str.contains(ward)]
+df_rs = df_rs[df_rs['市区町村名'].str.startswith(area)]
+
 df_rs['70平米換算取引価格'] = (df_rs['取引価格（総額）'] * (70 / df_rs['面積（㎡）'])).astype(np.int64)
-#st.write(df_rs.head())
+# st.write(df_rs.head())
 price_max = df_rs[['地区名', '70平米換算取引価格']].groupby('地区名').agg('mean')['70平米換算取引価格'].max()
 
 if aggregation_period == '全期間(2005-2020)':
@@ -34,10 +62,11 @@ else:
 df_area_groups = df_rs_target[['地区名', '70平米換算取引価格']].groupby('地区名')
 df_price_by_area = df_area_groups.agg(aggregation_mode).astype(np.int64)
 df_count_by_area = df_area_groups.count().rename(columns={'70平米換算取引価格': 'count'})
-#st.write(df_count_by_area)
+# st.write(df_count_by_area)
 
 
-gdf = load_geopandas(f"data/札幌市{ward}_geo.json").copy()
+gdf = load_geopandas(f"data/geojson/{area}_geo.json").copy()
+# st.write(gdf.head())
 # gdf = gdf.assign(bg_color=[[0, 0, 0, 0] for _ in range(len(gdf))])
 
 gdf['price'] = 0
@@ -47,8 +76,8 @@ for index, row in df_price_by_area.iterrows():
     area_name_kansuji = Converter.replace_area_number_to_kansuji(index)
     price = row["70平米換算取引価格"]
     count = df_count_by_area["count"].get(index, 0)
-    gdf.loc[gdf['S_NAME'].str.contains(area_name_kansuji), 'price'] = price
-    gdf.loc[gdf['S_NAME'].str.contains(area_name_kansuji), 'count'] = count
+    gdf.loc[gdf['S_NAME'].str.startswith(area_name_kansuji), 'price'] = price
+    gdf.loc[gdf['S_NAME'].str.startswith(area_name_kansuji), 'count'] = count
 
 gdf['norm_price'] = (gdf['price']) / price_max
 gdf['elevation'] = gdf['norm_price'] * 3000
@@ -77,8 +106,8 @@ geojson_layer = pydeck.Layer(
 st.pydeck_chart(pydeck.Deck(
     map_style='mapbox://styles/mapbox/streets-v11',
     initial_view_state=pydeck.ViewState(
-        latitude=43.05,
-        longitude=141.35,
+        latitude=pos['緯度'],
+        longitude=pos['経度'],
         zoom=10.5,
         pitch=50,
     ),
@@ -113,7 +142,7 @@ st.sidebar.markdown("""
 <p>出典</p>
 <div class="xx-small-font">
 <dl>
-<dt>マンション取引価格データ</dt>
+<dt>不動産取引価格データ</dt>
 <dd>不動産取引価格情報ダウンロードサービス
 (<a href="https://www.land.mlit.go.jp/webland/servlet/MainServlet">https://www.land.mlit.go.jp/webland/servlet/MainServlet</a>)</dd>
 <dt>地区境界データ</dt>
