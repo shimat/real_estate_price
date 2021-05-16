@@ -25,15 +25,15 @@ def load_real_estate_csv(file_name: str):
         header=0,
         usecols=['No',
                  '種類',
-                 # '都道府県名',
+                 '都道府県名',
                  '市区町村名',
                  '地区名',
                  '最寄駅：名称',
-                 '最寄駅：距離（分）',
+                 # '最寄駅：距離（分）',
                  '取引価格（総額）',
-                 '間取り',
+                 # '間取り',
                  '面積（㎡）',
-                 '建築年',
+                 # '建築年',
                  # '建物の構造',
                  # '用途',
                  # '都市計画',
@@ -43,11 +43,12 @@ def load_real_estate_csv(file_name: str):
                  # '改装'
                  ])
     # csv = csv[csv['市区町村名'].str.contains('札幌市')]
-    csv = csv[csv['種類'] == '中古マンション等']
-    csv['最寄駅：距離（分）'] = pd.to_numeric(csv["最寄駅：距離（分）"], errors='coerce')
+    # csv = csv[csv['種類'] == '中古マンション等']
+    # csv['最寄駅：距離（分）'] = pd.to_numeric(csv["最寄駅：距離（分）"], errors='coerce')
+    csv['面積（㎡）'] = csv['面積（㎡）'].str.replace('㎡以上', '')
     csv['面積（㎡）'] = pd.to_numeric(csv["面積（㎡）"], errors='coerce')
     csv['取引時点'] = csv["取引時点"].str.rstrip("年第１２３４四半期").astype(np.int32)
-    csv = csv.dropna(how='any')
+    #csv = csv.dropna(how='any')
     return csv
 
 
