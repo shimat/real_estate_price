@@ -1,6 +1,6 @@
 # real_estate_price
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/shimat/realestateprice/main/main.py)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/shimat/real_estate_price/main/main.py)
 
 Streamlit study for visualizing real-estate transaction
 
